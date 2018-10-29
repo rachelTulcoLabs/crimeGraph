@@ -1,0 +1,57 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="https://unpkg.com/reset-css@4.0.1/reset.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.js"></script>
+
+</head>
+
+<body>
+<div class="wrapper">
+
+    <div class="one">
+        <div id='idiot'></div>
+    </div>
+
+    <form class="two" id="limit">
+        <div class="parameter"><h6>Site</h6>
+            <select id="siteSelected">
+                <option value="">Sites</option>
+                <optgroup label="California">
+                <option value="DSL1">DSL: 10480 National Blvd</option>
+                <option value="DSL2">DSL: 10500 National Blvd</option>
+                <option value="DSL3">DSL: 10514 Natonal Blvd</option>
+                <option value="goshen">Goshen</option>
+                <option value="JPR">JPR Calabasas</option>
+                <option value="westbrook">Westbrook</option>
+            </select>
+        </div>
+
+        <div class="parameter"><h6>Dates</h6>
+            <input type="date" id="dateStart" name="dateStart"> to <input type="date" id="dateEnd" name="dateEnd">
+        </div>
+
+        <div class="parameter"><h6>Crime Type</h6>
+            <input type="checkbox" id="violentCrime" checked> Violent
+            <input type="checkbox" id="propertyCrime" checked> Property
+        </div>
+
+        <button type="button" class="btn-sm btn-outline-primary" onclick="viewChange()">View</button>
+        <small><a href='https://data.lacity.org/A-Safe-City/Crime-Data-from-2010-to-Present/y8tr-7khq' target='_blank' class="text-muted">Source</a></small>
+    </form>
+
+    <div class="three">
+    </div>
+    
+
+    <script src="crime2.js"></script>
+
+</div>
+</body>
+
+
+</html>
