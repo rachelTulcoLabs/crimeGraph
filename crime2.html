@@ -1,12 +1,15 @@
 <html>
 <head>
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/reset-css@4.0.1/reset.css">
+     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="style.css">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.js"></script>
+    <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="crossorigin=""></script>
 
 </head>
 
@@ -35,16 +38,17 @@
             <input type="date" id="dateStart" name="dateStart"> to <input type="date" id="dateEnd" name="dateEnd">
         </div>
 
-        <div class="parameter"><h6>Crime Type</h6>
-            <input type="checkbox" id="violentCrime" checked> Violent
-            <input type="checkbox" id="propertyCrime" checked> Property
-        </div>
 
         <button type="button" class="btn-sm btn-outline-primary" onclick="viewChange()">View</button>
         <small><a href='https://data.lacity.org/A-Safe-City/Crime-Data-from-2010-to-Present/y8tr-7khq' target='_blank' class="text-muted">Source</a></small>
     </form>
 
     <div class="three">
+        3
+    </div>
+
+    <div class="four">
+        <div id="map"></div>
     </div>
     
 

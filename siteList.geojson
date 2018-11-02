@@ -1,0 +1,69 @@
+{
+	"JPR Calabasas": {
+		"type": "Feature",
+		"id": "JPR",
+		"properties": {
+			"name": "JPR Calabasas"
+		},
+		"geometry": {
+			"type": "Point",
+			"coordinates": [-118.6473534, 34.1367165]
+		}
+	},
+	"DSL: 10480 National Blvd": {
+		"type": "Feature",
+		"id": "DSL1",
+		"properties": {
+			"name": "DSL: 10480 National Blvd"
+		},
+		"geometry": {
+			"type": "Point",
+			"coordinates": [-118.4129786, 34.0290103]
+		}
+	},
+	"DSL: 10500 National Blvd": {
+		"type": "Feature",
+		"id": "DSL2",
+		"properties": {
+			"name": "DSL: 10500 National Blvd"
+		},
+		"geometry": {
+			"type": "Point",
+			"coordinates": [-118.4133437, 34.0291586]
+		}
+	},
+	"DSL: 10514 Natonal Blvd": {
+		"type": "Feature",
+		"id": "DSL3",
+		"properties": {
+			"name": "DSL: 10514 Natonal Blvd"
+		},
+		"geometry": {
+			"type": "Point",
+			"coordinates": [-118.4133437, 34.0294786]
+		}
+	},
+	"Goshen": {
+		"type": "Feature",
+		"id": "goshen",
+		"properties": {
+			"name": "Goshen"
+		},
+		"geometry": {
+			"type": "Point",
+			"coordinates": [-118.4664595, 34.0461236]
+		}
+	},
+	"Westbrook": {
+		"type": "Feature",
+		"id": "westbrook",
+		"properties": {
+			"name": "Westbrook"
+		},
+		"geometry": {
+			"type": "Point",
+			"coordinates": [-118.4882103, 34.0626995]
+		}
+	}
+
+}

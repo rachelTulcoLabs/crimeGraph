@@ -1,60 +1,41 @@
+var updatemenus=[{
+        buttons: [
+            {args: [{'visible': [true, true, true, true]}],
+                label: 'All',
+                method: 'update'},
+            {args: [{'visible': [true, false, false, true]}],
+                label: 'Violent',
+                method: 'update'},
+            {args: [{'visible': [false, true, false,true]}],
+                label: 'Property',
+                method: 'update'},
+            {args: [{'visible': [false, false, true, true]},
+                       //{'annotations': [...low_annotations, ...high_annotations]}
+                      ],
+                label: 'Other',
+                method: 'update'},
+        ],
+        direction: 'left', pad: {'r': 10, 't': 10}, showactive: true, type: 'buttons', x: 0.1, xanchor: 'left', y: 1.2, yanchor: 'top'}]
+
 var violent = {x: [], y: [], type: 'scatter'};
     property = {x: [], y: [], type: 'scatter'};
     other = {x: [], y: [], type: 'scatter'};
     all = {x: [], y: [], type: 'scatter'};
-    data = [violent, property, all];
-    layout = {yaxis: {rangemode: 'tozero', zeroline: true}, updatemenus: updatemenus};
+    data = [violent, property, other, all];
+    layout = { title: 'Crime Types', updatemenus: updatemenus, yaxis: {rangemode: 'tozero', zeroline: true}, showlegend: false};
 
 Plotly.newPlot('idiot', data, layout,{responsive: true});
 
-var updatemenus=[
-    {
-        buttons: [
-            {
-                args: [{'visible': [true, true, false, false]}],
-                label: 'Violent',
-                method: 'update'
-            },
-            {
-                args: [{'visible': [false, false, true, true,]}],
-                label: 'Property',
-                method: 'update'
-            },
-            {
-                args: [{'visible': [true, true, true, true,]},
-                       //{'annotations': [...low_annotations, ...high_annotations]}
-                      ],
-                label: 'Other',
-                method: 'update'
-            },
-            {
-                args: [{'visible': [true, false, true, false,]}],
-                label: 'All',
-                method: 'update'
-            },
-
-        ],
-        direction: 'left',
-        pad: {'r': 10, 't': 10},
-        showactive: true,
-        type: 'buttons',
-        x: 0.1,
-        xanchor: 'left',
-        y: 1.2,
-        yanchor: 'top'
-    },
-
-]
-
 function viewChange(){
-  var site = document.getElementById('siteSelected').value
-      dateStart = document.getElementById('dateStart').value+""
+  var dateStart = document.getElementById('dateStart').value+""
       dateEnd = document.getElementById('dateEnd').value+""
-      violentFilter = document.getElementById('violentCrime').checked
-      propertyFilter = document.getElementById('propertyCrime').checked // get user input parameters
-  console.log(site, dateStart, dateEnd, violentFilter, propertyFilter)
+  window.site = document.getElementById('siteSelected').value
+      // violentFilter = document.getElementById('violentCrime').checked
+      // propertyFilter = document.getElementById('propertyCrime').checked // get user input parameters
+  console.log(window.site, dateStart, dateEnd)
 
   window.xAxis = dateDiff(dateStart, dateEnd)
+  getPerimeter(window.site)
   getData(dateStart, dateEnd)
 };
 
@@ -71,40 +52,41 @@ function dateDiff(x,y){
 };
 
 function getData(a,b){
-  var crimeLink = "https://data.lacity.org/resource/7fvc-faax.geojson?$where=date_occ between '"+a+"' and '"+b+"'&$limit=100000&$$app_token=0ua4S7cGliNHTOoYNVyVoz7pz"
-  $.getJSON(crimeLink, function(data) {
-    (filter(data, a))
+  window.crimeLink = "https://data.lacity.org/resource/7fvc-faax.geojson?$where=date_occ between '"+a+"' and '"+b+"'&$limit=100000&$$app_token=0ua4S7cGliNHTOoYNVyVoz7pz"
+  $.getJSON(window.crimeLink, function(data) {
+    window.origData = data
+    filter(data, a)
   })
 };
 
-function filter(data, date){
+function filter(data, dateStart){
   var count = [0,0,0]
-      dateStart = moment(dateStart)
-      allDays = []
-  
+      firstDate = moment(dateStart)
+      window.allDays = []
+
   for (var i = 0; i < data.features.length; i++){
     var code = data.features[i].properties.crm_cd
         date = moment(data.features[i].properties.date_occ)
-
-    if (date.diff(dateStart, 'days') == 0){
+    
+    if (date.diff(firstDate, 'days') == 0){
       count = crimeCategory(code,count)
-      if(i == (data.features.length-1)){allDays.push(count)}else{continue}
+      if(i == (data.features.length-1)){window.allDays.push(count)}else{continue}
     }else{
-      allDays.push(count)
+      window.allDays.push(count)
       count = [0,0,0]
-      dateStart.add(1,'d')
+      firstDate.add(1,'d')
       count = crimeCategory(code,count)
-      if(i == (data.features.length-1)){allDays.push(count)}else{continue}}
+      if(i == (data.features.length-1)){window.allDays.push(count)}else{continue}}
   }
-  breakdown(allDays)
+  breakdown(window.allDays)
 };
 
 function crimeCategory(a,count){
-  var vCodes = ["110", "113", "121", "122", "230", "231", "235", "236", "250", "251", "435", "436", "622", "623", "624", "625", "626", "627", "753", "756"]
-      pCodes = ["210","220","310","320","330","331","341","341","343","345","347","349","350","351","352","353","410","420","421","440","441","442","443","444","445","446","450","451","452","453","470","471","472","473","474","475","480","485","487","510","520","647","648","740","740","745","924","950","951"]
-  if (vCodes.includes(a)){
+  window.vCodes = ["110", "113", "121", "122", "230", "231", "235", "236", "250", "251", "435", "436", "622", "623", "624", "625", "626", "627", "753", "756"]
+  window.pCodes = ["210","220","310","320","330","331","341","341","343","345","347","349","350","351","352","353","410","420","421","440","441","442","443","444","445","446","450","451","452","453","470","471","472","473","474","475","480","485","487","510","520","647","648","740","740","745","924","950","951"]
+  if (window.vCodes.includes(a)){
     count[0] += 1;
-  }else if (pCodes.includes(a)) {
+  }else if (window.pCodes.includes(a)) {
     count[1] += 1;
   }else{
     count[2] +=1;
@@ -132,3 +114,57 @@ function breakdown(a){
   Plotly.newPlot('idiot', dataUpdated, layout, {responsive: true});
 };
 
+var map = new L.Map('map') //Initialize map
+var basemapLayer = new L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoicmNobGNoYW5nIiwiYSI6IjRlMWI3NDlhYmMxZWVlMzM0ZTM5MDU1M2RmZWZmOTI4In0.GINKorvt3kV6-YnRfH4iLQ');
+map.setView([34.0522, -118.2437],11)
+map.addLayer(basemapLayer);
+
+siteList = {};
+
+siteList['JPR'] = [-118.6473534, 34.1367165];
+siteList['DSL1'] = [-118.4129786, 34.0290103];
+siteList['DSL2'] = [-118.4133437, 34.0291586];
+siteList['DSL3'] = [-118.4133437, 34.0294786];
+siteList['goshen'] = [-118.4664595, 34.0461236];
+siteList['westbrook'] = [-118.4882103, 34.0626995];
+
+var crime = new L.GeoJSON.AJAX(window.crimeLink, { // GeoJSON of all cell activity
+  pointToLayer: activityMarker, //Draw points
+  onEachFeature: function (feature, layer) { 
+    layer.bindPopup(feature.properties.crm_cd_desc + " on " + feature.properties.date_occ.slice(0,10));
+    layer.on('mouseover', function (e) {this.openPopup();});
+    layer.on('mouseout', function (e) {this.closePopup();});
+  }
+});
+
+function activityMarker(feature, latlng){ // Point styling
+  var circle = {
+      radius: 4.5,
+      color: getColor(feature.properties.crm_cd),
+      weight: 1,
+      fillOpacity: 0.65
+  };
+  return L.circleMarker(latlng, circle)} 
+
+function getColor(a){
+  console.log(a)
+  if (window.vCodes.includes(a)){return '#dd2121';
+  }else if (window.pCodes.includes(a)) {return '#ffba54';
+  }else{return '#b5b5b5'}}
+
+function getPerimeter(site){
+  if (site != ""){
+    var coord = [siteList[site][1],siteList[site][0]]
+    var marker = L.marker(coord).addTo(map);
+    var circle = L.circle(coord, {radius: 1610}).addTo(map); 
+    map.fitBounds(circle.getBounds(),{maxZoom: 13}); // Zoom to site area
+    crime.addTo(map)
+  }else{
+    return
+  }
+  // var center = [radius.getLatLng().lng, radius.getLatLng().lat]
+    // options = {steps: 64, units: 'miles', properties: {foo: 'bar'}};
+    // var circle = turf.circle(center, 1, options); // 1 mi circle around site
+
+    // crimeWithin = turf.pointsWithinPolygon(crime.toGeoJSON(), circle);
+}
