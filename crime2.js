@@ -1,3 +1,27 @@
+var map = new L.Map('map') //Initialize map
+var basemapLayer = new L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoicmNobGNoYW5nIiwiYSI6IjRlMWI3NDlhYmMxZWVlMzM0ZTM5MDU1M2RmZWZmOTI4In0.GINKorvt3kV6-YnRfH4iLQ');
+map.setView([34.0522, -118.2437],11)
+map.addLayer(basemapLayer);
+
+window.vCodes = ["110", "113", "121", "122", "230", "231", "235", "236", "250", "251", "435", "436", "622", "623", "624", "625", "626", "627", "753", "756"]
+window.pCodes = ["210","220","310","320","330","331","341","341","343","345","347","349","350","351","352","353","410","420","421","440","441","442","443","444","445","446","450","451","452","453","470","471","472","473","474","475","480","485","487","510","520","647","648","740","740","745","924","950","951"]
+
+function activityMarker(feature, latlng){ // Point styling
+  var circle = {
+      radius: 4.5,
+      color: getColor(feature.properties.crm_cd),
+      weight: 1,
+      fillOpacity: 0.65
+  };
+  return L.circleMarker(latlng, circle)} 
+
+function getColor(a){
+  console.log(a)
+  if (window.vCodes.includes(a)){return '#dd2121';
+  }else if (window.pCodes.includes(a)) {return '#ffba54';
+  }else{return '#b5b5b5'}}
+
+
 var updatemenus=[{
         buttons: [
             {args: [{'visible': [true, true, true, true]}],
@@ -84,6 +108,13 @@ function geoLimit(data, site, a){
   // }else{return data}
   filter(within, a)
   table(within)
+  L.geoJSON(within, {
+    pointToLayer: activityMarker, //Draw points
+    onEachFeature: function (feature, layer) { 
+      layer.bindPopup(feature.properties.crm_cd_desc + " on " + feature.properties.date_occ.slice(0,10));
+      layer.on('mouseover', function (e) {this.openPopup();});
+      layer.on('mouseout', function (e) {this.closePopup();});
+    }}).addTo(map)
 }
 
 
@@ -95,7 +126,7 @@ function getPerimeter(site){
         marker = L.marker(coord).addTo(map);
         circle = L.circle(coord, {radius: 1610}).addTo(map); 
     map.fitBounds(circle.getBounds(),{maxZoom: 13}); // Zoom to site area
-    crime.addTo(map)
+    //crime.addTo(map)
   }else{
     return
   }
@@ -127,13 +158,10 @@ function table(data){
    for (var i = 0; i < data.features.length; i++){
     var row = "<tr><th scope='row'>"+data.features[i].properties.date_occ.substring(0,10)+"</th><td>"+data.features[i].properties.time_occ+"</td><td>"+data.features[i].properties.location+"</td><td>"+data.features[i].properties.crm_cd_desc+"</td></tr>"
     document.getElementById('allCrimes').innerHTML += row;
-   }
-   
+   } 
 }
 
 function crimeCategory(a,count){
-  window.vCodes = ["110", "113", "121", "122", "230", "231", "235", "236", "250", "251", "435", "436", "622", "623", "624", "625", "626", "627", "753", "756"]
-  window.pCodes = ["210","220","310","320","330","331","341","341","343","345","347","349","350","351","352","353","410","420","421","440","441","442","443","444","445","446","450","451","452","453","470","471","472","473","474","475","480","485","487","510","520","647","648","740","740","745","924","950","951"]
   if (window.vCodes.includes(a)){
     count[0] += 1;
   }else if (window.pCodes.includes(a)) {
@@ -163,35 +191,3 @@ function breakdown(a){
   dataUpdated = [c,d,e,f]
   Plotly.newPlot('idiot', dataUpdated, layout, {responsive: true});
 };
-
-var map = new L.Map('map') //Initialize map
-var basemapLayer = new L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoicmNobGNoYW5nIiwiYSI6IjRlMWI3NDlhYmMxZWVlMzM0ZTM5MDU1M2RmZWZmOTI4In0.GINKorvt3kV6-YnRfH4iLQ');
-map.setView([34.0522, -118.2437],11)
-map.addLayer(basemapLayer);
-
-
-var crime = new L.GeoJSON.AJAX(window.crimeLink, { // GeoJSON of all cell activity
-  pointToLayer: activityMarker, //Draw points
-  onEachFeature: function (feature, layer) { 
-    layer.bindPopup(feature.properties.crm_cd_desc + " on " + feature.properties.date_occ.slice(0,10));
-    layer.on('mouseover', function (e) {this.openPopup();});
-    layer.on('mouseout', function (e) {this.closePopup();});
-  }
-});
-
-function activityMarker(feature, latlng){ // Point styling
-  var circle = {
-      radius: 4.5,
-      //color: getColor(feature.properties.crm_cd),
-      color: "red",
-      weight: 1,
-      fillOpacity: 0.65
-  };
-  console.log("point")
-  return L.circleMarker(latlng, circle)} 
-
-function getColor(a){
-  console.log(a)
-  if (window.vCodes.includes(a)){return '#dd2121';
-  }else if (window.pCodes.includes(a)) {return '#ffba54';
-  }else{return '#b5b5b5'}}
