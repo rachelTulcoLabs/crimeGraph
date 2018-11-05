@@ -17,6 +17,16 @@ var updatemenus=[{
         ],
         direction: 'left', pad: {'r': 10, 't': 10}, showactive: true, type: 'buttons', x: 0.1, xanchor: 'left', y: 1.2, yanchor: 'top'}]
 
+
+var siteList = {};
+
+siteList['JPR'] = [-118.6473534, 34.1367165];
+siteList['DSL1'] = [-118.4129786, 34.0290103];
+siteList['DSL2'] = [-118.4133437, 34.0291586];
+siteList['DSL3'] = [-118.4133437, 34.0294786];
+siteList['goshen'] = [-118.4664595, 34.0461236];
+siteList['westbrook'] = [-118.4882103, 34.0626995];
+
 var violent = {x: [], y: [], type: 'scatter'};
     property = {x: [], y: [], type: 'scatter'};
     other = {x: [], y: [], type: 'scatter'};
@@ -30,12 +40,9 @@ function viewChange(){
   var dateStart = document.getElementById('dateStart').value+""
       dateEnd = document.getElementById('dateEnd').value+""
   window.site = document.getElementById('siteSelected').value
-      // violentFilter = document.getElementById('violentCrime').checked
-      // propertyFilter = document.getElementById('propertyCrime').checked // get user input parameters
   console.log(window.site, dateStart, dateEnd)
 
   window.xAxis = dateDiff(dateStart, dateEnd)
-  getPerimeter(window.site)
   getData(dateStart, dateEnd)
 };
 
@@ -55,9 +62,44 @@ function getData(a,b){
   window.crimeLink = "https://data.lacity.org/resource/7fvc-faax.geojson?$where=date_occ between '"+a+"' and '"+b+"'&$limit=100000&$$app_token=0ua4S7cGliNHTOoYNVyVoz7pz"
   $.getJSON(window.crimeLink, function(data) {
     window.origData = data
-    filter(data, a)
+    geoLimit(data, window.site, a)
+    //filter(data, a)
   })
 };
+
+function geoLimit(data, site, a){
+  var coord = siteList[site]
+      options = {steps: 64, units: 'miles', properties: {foo: 'bar'}};
+      circle = turf.circle(coord, 1, options); // 1 mi circle around site
+      within = turf.pointsWithinPolygon(data, circle);
+      console.log(within)
+  getPerimeter(site)
+  // if (site != ""){
+  //   var coord = siteList[site]
+  //   get radius 
+  //   for points in list
+  //     if (in radius circle)
+  //       add to list
+  //     return list
+  // }else{return data}
+  filter(within, a)
+  table(within)
+}
+
+
+function getPerimeter(site){
+  if (site != ""){
+    //clear all layers
+    //console.log(map.hasLayer(marker))
+    var coord = [siteList[site][1],siteList[site][0]]
+        marker = L.marker(coord).addTo(map);
+        circle = L.circle(coord, {radius: 1610}).addTo(map); 
+    map.fitBounds(circle.getBounds(),{maxZoom: 13}); // Zoom to site area
+    crime.addTo(map)
+  }else{
+    return
+  }
+}
 
 function filter(data, dateStart){
   var count = [0,0,0]
@@ -80,6 +122,14 @@ function filter(data, dateStart){
   }
   breakdown(window.allDays)
 };
+
+function table(data){
+   for (var i = 0; i < data.features.length; i++){
+    var row = "<tr><th scope='row'>"+data.features[i].properties.date_occ.substring(0,10)+"</th><td>"+data.features[i].properties.time_occ+"</td><td>"+data.features[i].properties.location+"</td><td>"+data.features[i].properties.crm_cd_desc+"</td></tr>"
+    document.getElementById('allCrimes').innerHTML += row;
+   }
+   
+}
 
 function crimeCategory(a,count){
   window.vCodes = ["110", "113", "121", "122", "230", "231", "235", "236", "250", "251", "435", "436", "622", "623", "624", "625", "626", "627", "753", "756"]
@@ -119,14 +169,6 @@ var basemapLayer = new L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/ligh
 map.setView([34.0522, -118.2437],11)
 map.addLayer(basemapLayer);
 
-siteList = {};
-
-siteList['JPR'] = [-118.6473534, 34.1367165];
-siteList['DSL1'] = [-118.4129786, 34.0290103];
-siteList['DSL2'] = [-118.4133437, 34.0291586];
-siteList['DSL3'] = [-118.4133437, 34.0294786];
-siteList['goshen'] = [-118.4664595, 34.0461236];
-siteList['westbrook'] = [-118.4882103, 34.0626995];
 
 var crime = new L.GeoJSON.AJAX(window.crimeLink, { // GeoJSON of all cell activity
   pointToLayer: activityMarker, //Draw points
@@ -140,10 +182,12 @@ var crime = new L.GeoJSON.AJAX(window.crimeLink, { // GeoJSON of all cell activi
 function activityMarker(feature, latlng){ // Point styling
   var circle = {
       radius: 4.5,
-      color: getColor(feature.properties.crm_cd),
+      //color: getColor(feature.properties.crm_cd),
+      color: "red",
       weight: 1,
       fillOpacity: 0.65
   };
+  console.log("point")
   return L.circleMarker(latlng, circle)} 
 
 function getColor(a){
@@ -151,20 +195,3 @@ function getColor(a){
   if (window.vCodes.includes(a)){return '#dd2121';
   }else if (window.pCodes.includes(a)) {return '#ffba54';
   }else{return '#b5b5b5'}}
-
-function getPerimeter(site){
-  if (site != ""){
-    var coord = [siteList[site][1],siteList[site][0]]
-    var marker = L.marker(coord).addTo(map);
-    var circle = L.circle(coord, {radius: 1610}).addTo(map); 
-    map.fitBounds(circle.getBounds(),{maxZoom: 13}); // Zoom to site area
-    crime.addTo(map)
-  }else{
-    return
-  }
-  // var center = [radius.getLatLng().lng, radius.getLatLng().lat]
-    // options = {steps: 64, units: 'miles', properties: {foo: 'bar'}};
-    // var circle = turf.circle(center, 1, options); // 1 mi circle around site
-
-    // crimeWithin = turf.pointsWithinPolygon(crime.toGeoJSON(), circle);
-}
