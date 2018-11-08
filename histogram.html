@@ -16,7 +16,8 @@
 
 <body>
 <div class="wrapper">
-    <form class="control">
+    <div class="control">
+    <form>
     <div class="title">Crime Mapping</div>
         <label for="siteSelected">Site</label>
             <select id="siteSelected" name="siteSelected">
@@ -38,12 +39,14 @@
         <button type="button" class="btn-sm btn-outline-primary" onclick="">Reset</button>
         <small><a href='https://data.lacity.org/A-Safe-City/Crime-Data-from-2010-to-Present/y8tr-7khq' target='_blank' class="text-muted">Source</a></small>
     </form>
+    </div>
 
     <div class="graph">
         <div id='idiot'></div>
     </div>
 
     <div class="graph2">
+        <div id = 'graph2'></div>
     </div>
 
     <div class="table">
@@ -61,14 +64,12 @@
         </table>
     </div>
 
-    
-
     <div class="map">
         <div id="map"></div>
     </div>
     
 
-    <script src="crime2.js"></script>
+    <script src="histogram.js"></script>
 
 </div>
 </body>

@@ -1,3 +1,4 @@
+////////setupMap/////////////
 var map = new L.Map('map') //Initialize map
 var basemapLayer = new L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoicmNobGNoYW5nIiwiYSI6IjRlMWI3NDlhYmMxZWVlMzM0ZTM5MDU1M2RmZWZmOTI4In0.GINKorvt3kV6-YnRfH4iLQ');
 map.setView([34.0522, -118.2437],11)
@@ -16,9 +17,8 @@ function activityMarker(feature, latlng){ // Point styling
   return L.circleMarker(latlng, circle)} 
 
 function getColor(a){
-  console.log(a)
-  if (window.vCodes.includes(a)){return '#2b6dbc';
-  }else if (window.pCodes.includes(a)) {return '#30619c';
+  if (window.vCodes.includes(a)){return '#f58538';
+  }else if (window.pCodes.includes(a)) {return '#2b6dbc';
   }else{return '#b5b5b5'}}
 
 
@@ -51,12 +51,12 @@ siteList['DSL3'] = [-118.4133437, 34.0294786];
 siteList['goshen'] = [-118.4664595, 34.0461236];
 siteList['westbrook'] = [-118.4882103, 34.0626995];
 
-var violent = {x: [], y: [], type: 'scatter'};
-    property = {x: [], y: [], type: 'scatter'};
-    other = {x: [], y: [], type: 'scatter'};
-    all = {x: [], y: [], type: 'scatter'};
-    data = [violent, property, other, all];
-    layout = { title: 'Crime Types', updatemenus: updatemenus, yaxis: {rangemode: 'tozero', zeroline: true}, showlegend: false};
+var violent = {x: [], y: [], type: 'bar'};
+    property = {x: [], y: [], type: 'bar'};
+    other = {x: [], y: [], type: 'bar'};
+//    all = {x: [], y: [], type: 'bar'};
+    data = [violent, property, other];
+    layout = { title: 'Crime Types', yaxis: {rangemode: 'tozero', zeroline: true}, showlegend: false, barmode: "stack"};
 
 Plotly.newPlot('idiot', data, layout,{responsive: true});
 
@@ -74,12 +74,12 @@ function dateDiff(x,y){
   var a = moment(x)
       b = moment(y)
       d = b.diff(a,'days')
-      xValue=[]
+      window.xValue=[]
   for (i = 0; i < d+1; i++){  // getting dates for x axis values
-    xValue.push(a.format("YYYY-MM-DD"));
+    window.xValue.push(a.format("YYYY-MM-DD"));
     a.add(1,'d');
   }
-  return xValue    
+  return window.xValue    
 };
 
 function getData(a,b){
@@ -87,7 +87,6 @@ function getData(a,b){
   $.getJSON(window.crimeLink, function(data) {
     window.origData = data
     geoLimit(data, window.site, a)
-    //filter(data, a)
   })
 };
 
@@ -95,8 +94,7 @@ function geoLimit(data, site, a){
   var coord = siteList[site]
       options = {steps: 64, units: 'miles', properties: {foo: 'bar'}};
       circle = turf.circle(coord, 1, options); // 1 mi circle around site
-      within = turf.pointsWithinPolygon(data, circle);
-      console.log(within)
+      window.within = turf.pointsWithinPolygon(data, circle);
   getPerimeter(site)
   // if (site != ""){
   //   var coord = siteList[site]
@@ -106,9 +104,11 @@ function geoLimit(data, site, a){
   //       add to list
   //     return list
   // }else{return data}
-  filter(within, a)
-  table(within)
-  L.geoJSON(within, {
+  filter(window.within, a)
+  filter2(window.xValue, window.within)
+  //table(window.within)
+  
+  L.geoJSON(window.within, {
     pointToLayer: activityMarker, //Draw points
     onEachFeature: function (feature, layer) { 
       layer.bindPopup(feature.properties.crm_cd_desc + " on " + feature.properties.date_occ.slice(0,10));
@@ -120,39 +120,60 @@ function geoLimit(data, site, a){
 
 function getPerimeter(site){
   if (site != ""){
-    //clear all layers
-    //console.log(map.hasLayer(marker))
+    map.eachLayer(function (layer) {map.removeLayer(layer);});
+    map.addLayer(basemapLayer);
     var coord = [siteList[site][1],siteList[site][0]]
         marker = L.marker(coord).addTo(map);
         circle = L.circle(coord, {radius: 1610}).addTo(map); 
-    map.fitBounds(circle.getBounds(),{maxZoom: 13}); // Zoom to site area
+    map.fitBounds(circle.getBounds(),{maxZoom: 14}); // Zoom to site area
     //crime.addTo(map)
   }else{
     return
   }
 }
 
-function filter(data, dateStart){
-  var count = [0,0,0]
-      firstDate = moment(dateStart)
-      window.allDays = []
+function filter(date, data){
+  window.crime = {}
+  for (var i = 0; i < date.length; i++){
+    window.crime[date[i]] = [0,0,0]
+  }
 
   for (var i = 0; i < data.features.length; i++){
     var code = data.features[i].properties.crm_cd
-        date = moment(data.features[i].properties.date_occ)
-    
-    if (date.diff(firstDate, 'days') == 0){
-      count = crimeCategory(code,count)
-      if(i == (data.features.length-1)){window.allDays.push(count)}else{continue}
+        dateOcc = data.features[i].properties.date_occ.slice(0,10)
+    if (window.vCodes.includes(code)){
+      window.crime[dateOcc][0] += 1;
+    }else if (window.pCodes.includes(code)) {
+      window.crime[dateOcc][1] += 1;
     }else{
-      window.allDays.push(count)
-      count = [0,0,0]
-      firstDate.add(1,'d')
-      count = crimeCategory(code,count)
-      if(i == (data.features.length-1)){window.allDays.push(count)}else{continue}}
+      window.crime[dateOcc][2] +=1;
+    }
   }
-  breakdown(window.allDays)
-};
+  console.log(window.crime)
+  breakdown(window.crime)
+}
+
+// function filter(data, dateStart){
+//   var count = [0,0,0]
+//       firstDate = moment(dateStart)
+//       window.allDays = []
+
+//   for (var i = 0; i < data.features.length; i++){
+//     var code = data.features[i].properties.crm_cd
+//         date = moment(data.features[i].properties.date_occ)
+    
+//     if (date.diff(firstDate, 'days') == 0){
+//       count = crimeCategory(code,count)
+//       if(i == (data.features.length-1)){window.allDays.push(count)}else{continue}
+//     }else{
+//       window.allDays.push(count)
+//       count = [0,0,0]
+//       firstDate.add(1,'d')
+//       count = crimeCategory(code,count)
+//       if(i == (data.features.length-1)){window.allDays.push(count)}else{continue}}
+//   }
+//   breakdown(window.allDays)
+// };
 
 function table(data){
   document.getElementById('allCrimes').innerHTML = ""
@@ -173,7 +194,11 @@ function crimeCategory(a,count){
   return count
 };
 
-function breakdown(a){
+function breakdown(data){
+  var a = Object.keys(data).map(function(key){
+    return data[key];
+  });
+
   window.vArray = []
   window.pArray = []
   window.oArray = []
@@ -185,10 +210,47 @@ function breakdown(a){
     window.allArray.push(a[i][0]+a[i][1]+a[i][2])
   }
 
-  c = {x: xAxis, y: vArray, type: 'scatter', mode: 'lines', line:{color:'#f58538'}, name: 'Violent',};
-  d = {x: xAxis, y: pArray, type: 'scatter', mode: 'lines', line:{color:'#30619c'}, name: 'Property',};
-  e = {x: xAxis, y: oArray, type: 'scatter', mode: 'lines',line:{color:'#dad3cc'}, name: 'Other',};
-  f = {x: xAxis, y: allArray, type: 'scatter', mode: 'lines', line: {dash: 'dot', color:'#dad3cc'},name: 'Total',};
-  dataUpdated = [c,d,e,f]
-  Plotly.newPlot('idiot', dataUpdated, layout, {responsive: true});
+  c = {x: xAxis, y: vArray, type: 'bar', mode: 'lines', marker:{color:'#f58538'}, name: 'Violent',};
+  d = {x: xAxis, y: pArray, type: 'bar', mode: 'lines', marker:{color:'#2b6dbc'}, name: 'Property',};
+  e = {x: xAxis, y: oArray, type: 'bar', mode: 'lines',marker:{color:'#dad3cc'}, name: 'Other',};
+  //f = {x: xAxis, y: allArray, type: 'bar', mode: 'lines', line: {dash: 'dot', color:'#dad3cc'},name: 'Total',};
+  dataUpdated = [c,d,e]
+  Plotly.newPlot('idiot', dataUpdated, layout, {responsive: true} );
+
+  var clicked = document.getElementById('idiot')
+  clicked.on('plotly_click', function(data){
+    window.clickedDate = data.points[0].x
+    
+    var clickedPoints = []
+    for (var i = 0; i < window.within.features.length; i++){ //getting events from clicked date
+      console.log(window.within.features[i].properties.date_occ.slice(0,10),clickedDate)
+      if (window.within.features[i].properties.date_occ.slice(0,10) == clickedDate){
+        clickedPoints.push(window.within.features[i].properties.crm_cd_desc)
+      }else{continue}
+    }
+
+    var crimeTypes = {}
+    for (var i = 0; i < clickedPoints.length; i++){
+      if (Object.keys(crimeTypes).includes(clickedPoints[i])){
+        crimeTypes[clickedPoints[i]] += 1
+      }else{
+        crimeTypes[clickedPoints[i]] = 1
+      }
+    }
+
+    window.dayLabels = Object.keys(crimeTypes)
+    window.dayValues = Object.keys(crimeTypes).map(function(key){
+    return crimeTypes[key];});
+
+    console.log(clickedPoints, crimeTypes, dayLabels, dayValues)
+
+    var dayData = [{ labels: dayLabels, values: dayValues, type: 'pie', hole: .4,}];
+        dayLayout = {showlegend: false}
+    Plotly.newPlot('graph2', dayData, dayLayout, {responsive: true});
+
+  })
+
+
 };
+
+
