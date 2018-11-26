@@ -4,6 +4,11 @@ var basemapLayer = new L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/ligh
 map.setView([34.0522, -118.2437],11)
 map.addLayer(basemapLayer);
 
+var heatMap = new L.Map('heatMap') //Initialize map
+var basemap = new L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoicmNobGNoYW5nIiwiYSI6IjRlMWI3NDlhYmMxZWVlMzM0ZTM5MDU1M2RmZWZmOTI4In0.GINKorvt3kV6-YnRfH4iLQ');
+heatMap.setView([34.0522, -118.2437],11)
+heatMap.addLayer(basemap);
+
 window.vCodes = ["110", "113", "121", "122", "230", "231", "235", "236", "250", "251", "435", "436", "622", "623", "624", "625", "626", "627", "753", "756"]
 window.pCodes = ["210","220","310","320","330","331","341","341","343","345","347","349","350","351","352","353","410","420","421","440","441","442","443","444","445","446","450","451","452","453","470","471","472","473","474","475","480","485","487","510","520","647","648","740","740","745","924","950","951"]
 
@@ -56,7 +61,8 @@ var violent = {x: [], y: [], type: 'bar'};
     other = {x: [], y: [], type: 'bar'};
 //    all = {x: [], y: [], type: 'bar'};
     data = [violent, property, other];
-    layout = { title: 'Crime Types', yaxis: {rangemode: 'tozero', zeroline: true}, showlegend: false, barmode: "stack"};
+    layout = { title: 'Crime Types', yaxis: {rangemode: 'tozero', zeroline: true},  barmode: "stack"//, showlegend: false
+  };
 
 Plotly.newPlot('idiot', data, layout,{responsive: true});
 
@@ -96,25 +102,20 @@ function geoLimit(data, site, a){
       circle = turf.circle(coord, 1, options); // 1 mi circle around site
       window.within = turf.pointsWithinPolygon(data, circle);
   getPerimeter(site)
-  // if (site != ""){
-  //   var coord = siteList[site]
-  //   get radius 
-  //   for points in list
-  //     if (in radius circle)
-  //       add to list
-  //     return list
-  // }else{return data}
-  filter(window.within, a)
-  filter2(window.xValue, window.within)
-  //table(window.within)
-  
-  L.geoJSON(window.within, {
+  filter(window.within, window.xValue)
+  table(window.within)
+  window.heatList = []
+//  L.geoJSON(window.within, { //only within perimeter
+  L.geoJSON(data, { //all data
     pointToLayer: activityMarker, //Draw points
     onEachFeature: function (feature, layer) { 
+      window.heatList.push([feature.geometry.coordinates[1],feature.geometry.coordinates[0]]),
       layer.bindPopup(feature.properties.crm_cd_desc + " on " + feature.properties.date_occ.slice(0,10));
       layer.on('mouseover', function (e) {this.openPopup();});
       layer.on('mouseout', function (e) {this.closePopup();});
     }}).addTo(map)
+
+  L.heatLayer(window.heatList).addTo(heatMap)
 }
 
 
@@ -124,18 +125,21 @@ function getPerimeter(site){
     map.addLayer(basemapLayer);
     var coord = [siteList[site][1],siteList[site][0]]
         marker = L.marker(coord).addTo(map);
-        circle = L.circle(coord, {radius: 1610}).addTo(map); 
-    map.fitBounds(circle.getBounds(),{maxZoom: 14}); // Zoom to site area
+        heatMarker = L.marker(coord).addTo(heatMap);
+        circle = L.circle(coord, {radius: 1610}).addTo(map);
+        heatCircle = L.circle(coord, {radius: 1610}).addTo(heatMap); 
+    map.fitBounds(circle.getBounds(),{maxZoom: 14});
+    heatMap.fitBounds(circle.getBounds(),{maxZoom: 14}); // Zoom to site area
     //crime.addTo(map)
   }else{
     return
   }
 }
 
-function filter(date, data){
+function filter(data, dateList){
   window.crime = {}
-  for (var i = 0; i < date.length; i++){
-    window.crime[date[i]] = [0,0,0]
+  for (var i = 0; i < dateList.length; i++){
+    window.crime[dateList[i]] = [0,0,0]
   }
 
   for (var i = 0; i < data.features.length; i++){
@@ -178,7 +182,12 @@ function filter(date, data){
 function table(data){
   document.getElementById('allCrimes').innerHTML = ""
    for (var i = 0; i < data.features.length; i++){
-    var row = "<tr><th scope='row'>"+data.features[i].properties.date_occ.substring(0,10)+"</th><td>"+data.features[i].properties.time_occ+"</td><td>"+data.features[i].properties.location+"</td><td>"+data.features[i].properties.crm_cd_desc+"</td></tr>"
+      var from = turf.point(siteList[window.site])
+          to = turf.point(data.features[i].geometry.coordinates)
+         options = {units: 'miles'}
+         distance = turf.distance(from, to, options).toPrecision(3)
+
+    var row = "<tr><th scope='row'>"+data.features[i].properties.date_occ.substring(0,10)+"</th><td>"+data.features[i].properties.time_occ+"</td><td>"+data.features[i].properties.crm_cd_desc+"</td><td>"+distance+"</td></tr>"
     document.getElementById('allCrimes').innerHTML += row;
    } 
 }
@@ -202,18 +211,18 @@ function breakdown(data){
   window.vArray = []
   window.pArray = []
   window.oArray = []
-  window.allArray = []
+//  window.allArray = []
   for (var i = 0; i < a.length; i++){
     window.vArray.push(a[i][0])
     window.pArray.push(a[i][1])
     window.oArray.push(a[i][2])
-    window.allArray.push(a[i][0]+a[i][1]+a[i][2])
+//    window.allArray.push(a[i][0]+a[i][1]+a[i][2])
   }
 
   c = {x: xAxis, y: vArray, type: 'bar', mode: 'lines', marker:{color:'#f58538'}, name: 'Violent',};
   d = {x: xAxis, y: pArray, type: 'bar', mode: 'lines', marker:{color:'#2b6dbc'}, name: 'Property',};
   e = {x: xAxis, y: oArray, type: 'bar', mode: 'lines',marker:{color:'#dad3cc'}, name: 'Other',};
-  //f = {x: xAxis, y: allArray, type: 'bar', mode: 'lines', line: {dash: 'dot', color:'#dad3cc'},name: 'Total',};
+
   dataUpdated = [c,d,e]
   Plotly.newPlot('idiot', dataUpdated, layout, {responsive: true} );
 
@@ -244,9 +253,9 @@ function breakdown(data){
 
     console.log(clickedPoints, crimeTypes, dayLabels, dayValues)
 
-    var dayData = [{ labels: dayLabels, values: dayValues, type: 'pie', hole: .4,}];
-        dayLayout = {showlegend: false}
-    Plotly.newPlot('graph2', dayData, dayLayout, {responsive: true});
+    // var dayData = [{ labels: dayLabels, values: dayValues, type: 'pie', hole: .4,}];
+    //     dayLayout = {showlegend: false}
+    // Plotly.newPlot('graph2', dayData, dayLayout, {responsive: true});
 
   })
 

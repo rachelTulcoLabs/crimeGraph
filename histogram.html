@@ -1,22 +1,32 @@
 <html>
 <head>
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/reset-css@4.0.1/reset.css">
-     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="style.css">
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.js"></script>
     <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="crossorigin=""></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.js"></script>
 
+    <script src="Leaflet.Icon.Chip.js"></script>
+    <script src="Leaflet.Marker.Stack.js"></script>
+
+      <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+    <meta charset="utf-8">
 </head>
 
 <body>
 <div class="wrapper">
-    <div class="control">
+<!--     <div class="control">
     <form>
     <div class="title">Crime Mapping</div>
         <label for="siteSelected">Site</label>
@@ -39,15 +49,41 @@
         <button type="button" class="btn-sm btn-outline-primary" onclick="">Reset</button>
         <small><a href='https://data.lacity.org/A-Safe-City/Crime-Data-from-2010-to-Present/y8tr-7khq' target='_blank' class="text-muted">Source</a></small>
     </form>
+    </div> -->
+    <div class="titleHeader" id="title">
+        Crime Within 1 Mile Radius from 
+    </div>
+
+    <div class="counter">
+        <div id="total" class="count top"><h5 class="none">Total Crimes</h5></div>
+        <div id="violent" class="count top "><h5 class="typeV">Violent Crimes</h5></div>
+        <div id="property" class="count top "><h5 class="typeP">Property Crimes</h5></div>
+        <div id="other" class="count top "><h5 class="typeO">Other Crimes</h5></div>
+    </div>
+
+    <div class="counter">
+        <div id="assault" class="count"><h5 class="typeV">Assault/Battery</h5></div>
+        <div id="murder" class="count"><h5 class="typeV">Murder</h5></div>
+        <div id="arson" class="count"><h5 class="typeP">Arson</h5></div>
+        <div id="burglary" class="count"><h5 class="typeP">Burglary</h5></div>
+        <div id="robbery" class="count"><h5 class="typeP">Robbery/Theft</h5></div>
+        <div id="vandalism" class="count"><h5 class="typeP">Vandalism</h5></div>
+        <div id="breakIn" class="count"><h5 class="typeP">Car Break In</h5></div>
+        <div id="theft" class="count"><h5 class="typeP">Car Theft</h5></div>
     </div>
 
     <div class="graph">
         <div id='idiot'></div>
     </div>
 
-    <div class="graph2">
-        <div id = 'graph2'></div>
+    <div class="pointMap">
+        <div id="map"></div>
     </div>
+
+
+<!--      <div class="heatMap">
+        <div id ="heatMap"></div>
+    </div> -->
 
     <div class="table">
         <table>
@@ -55,21 +91,17 @@
         <tr>
             <th scope="col">Date</th>
             <th scope="col">Time</th>
-            <th scope="col">Location</th> 
             <th scope="col">Description</th>
+            <th scope="col">Distance from Site (Miles)</th>
         </tr>
         </thead>
         <tbody id="allCrimes">
         </tbody>
         </table>
     </div>
-
-    <div class="map">
-        <div id="map"></div>
-    </div>
     
 
-    <script src="histogram.js"></script>
+    <script src="histogramStack.js"></script>
 
 </div>
 </body>
